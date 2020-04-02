@@ -1,0 +1,8 @@
+*.csv
+forecasting_features_test.pkl
+forecasting_features_train.pkl
+forecasting_features_val.pkl
+*.npy
+*.pyc
+/__pycache__/*
+.ipynb_checkpoints/*
