@@ -53,14 +53,18 @@ pip install -r requirements.txt
 
 Argoverse provides both the full dataset, computed features and the sample version of the dataset. Head to [their website](https://www.argoverse.org/data.html#download-link) to see the download option.
 Here, we use pre-trained features.
-
-
-### 3) Install dependencies
-Install the packages mentioned in `requirements.txt`
 ```
-pip install -r requirements.txt
+mkdir features
+cd features/
 ```
----
+To Download argoverse features run the following commands in the terminal:
+```
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1tsMMMxwAQiixUYlc9cC4iaCCjUAdbzFT' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1tsMMMxwAQiixUYlc9cC4iaCCjUAdbzFT" -O forecasting_features_val.pkl && rm -rf /tmp/cookies.txt 
+
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1kCUZHOvEN_HcN07QEeXRPh2tdCS7j0kc' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1kCUZHOvEN_HcN07QEeXRPh2tdCS7j0kc" -O forecasting_features_train.pkl && rm -rf /tmp/cookies.txt
+
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1kBj2C08T1mEn1eT_q30Aoudjg9uTH89z' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1kBj2C08T1mEn1eT_q30Aoudjg9uTH89z" -O forecasting_features_test.pkl && rm -rf /tmp/cookies.txt
+```
 
 ## Usage
 Running Motion Forecasting baselines has the below 3 components. The runtimes observed on a `p2.8xlarge` instance (8 NVIDIA K80 GPUs, 32 vCPUs and 488 GiB RAM) are also provided for each part:
