@@ -6,6 +6,6 @@ setuptools==41.0.1
 termcolor==1.1.0
 pandas==0.25.1
 Shapely==1.6.4.post2
-tensorflow==1.14.0
+tensorflow==2.0.0
 numpy==1.17.1
 scikit_learn==0.21.3
