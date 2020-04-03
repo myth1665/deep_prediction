@@ -16,7 +16,7 @@
 
 - [Installation](https://github.com/sapan-ostic/deep_prediction/wiki/Installations)
 - [Usage](#usage)
-- [GCP Instructions](https://github.com/sapan-ostic/deep_prediction/wiki/General GCP Instructions)
+- [GCP Instructions](https://github.com/sapan-ostic/deep_prediction/wiki/)
 ---
 
 ## Usage
