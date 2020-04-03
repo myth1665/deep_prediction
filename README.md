@@ -38,6 +38,18 @@ wget https://s3.amazonaws.com/argoai-argoverse/hd_maps.tar.gz
 tar -xvf hd_maps.tar.gz
 rm hd_maps.tar.gz
 ```
+Your directory will look like this:
+```
+argoverse-api
+    └── data_loading
+    └── evaluation
+    └── map_representation
+    └── utils
+    └── visualization
+└── map_files
+└── license
+...
+```
 
 ### 2) Download Deep-Prediction Repository
 ```
@@ -51,6 +63,7 @@ Install the packages mentioned in `requirements.txt`
 pip install -r requirements.txt
 ```
 
+### 2) Download Data
 Argoverse provides both the full dataset, computed features and the sample version of the dataset. Head to [their website](https://www.argoverse.org/data.html#download-link) to see the download option.
 Here, we use pre-trained features.
 ```
@@ -65,35 +78,26 @@ wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download
 
 wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1kBj2C08T1mEn1eT_q30Aoudjg9uTH89z' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1kBj2C08T1mEn1eT_q30Aoudjg9uTH89z" -O forecasting_features_test.pkl && rm -rf /tmp/cookies.txt
 ```
+Download Forecasting Samples
+```
+cd ..
+wget https://s3.amazonaws.com/argoai-argoverse/forecasting_sample_v1.1.tar.gz
+tar -xvf forecasting_sample_v1.1.tar.gz
+rm forecasting_sample_v1.1.tar.gz
+```
 
 ## Usage
-Running Motion Forecasting baselines has the below 3 components. The runtimes observed on a `p2.8xlarge` instance (8 NVIDIA K80 GPUs, 32 vCPUs and 488 GiB RAM) are also provided for each part:
 
-### 1) Feature computation (`compute_features.py`)
+Running Motion Forecasting baselines has the below 3 components. The runtimes observed on a p2.8xlarge instance (8 NVIDIA K80 GPUs, 32 vCPUs and 488 GiB RAM) are also provided for each part:
 
-To begin with, we need to compute social and map features for train, val and test set. This is the most computationally expensive part.
-
-Run the following script to compute features for each of train/val/test.
-```
-$ python compute_features.py --data_dir <path/to/data> --feature_dir <directory/where/features/to/be/saved> --mode <train/val/test> --obs_len 20 --pred_len 30
-```
-| Component | Mode | Runtime |
-| --- | --- | --- |
-| Feature computation (`compute_features.py`) | train | 38 hrs |
-| Feature computation (`compute_features.py`) | val | 7 hrs |
-| Feature computation (`compute_features.py`) | test | 14 hrs |
-
-
-*Note*: If you are not changing anything in the feature computation step, you can also download the precomputed features from [this](https://www.google.com/url?q=https://drive.google.com/drive/folders/1hHbpdlsgQL_XOxrUK0OuWGX0BxiGpxKY?usp%3Dsharing&sa=D&source=hangouts&ust=1572986070601000&usg=AFQjCNFZPWA9Z17Oi1bf3HAmMwKhRgRM_Q) link
-
-### 2) Run forecasting baselines (`nn_train_test.py`, `lstm_train_test.py`)
+### 1) Run forecasting baselines (`const_vel_train_test.py`, `nn_train_test.py`, `lstm_train_test.py`)
 
 Once the features have been computed, we can run any of the below baselines. 
 
 #### Constant Velocity:
 
 ```
-$ python const_vel_train_test.py --test_features <path/to/test/features> --obs_len 20 --pred_len 30 --traj_save_path <pkl/file/for/forecasted/trajectories>
+$ python const_vel_train_test.py --test_features features/forecasting_features_test.pkl --obs_len 20 --pred_len 30 --traj_save_path saved_traj/const_vel.pkl
 ```
 
 | Component | Mode | Runtime |
@@ -105,12 +109,12 @@ $ python const_vel_train_test.py --test_features <path/to/test/features> --obs_l
 
 Using Map prior:
 ```
-$ python nn_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --use_map --use_delta --obs_len 20 --pred_len 30 --n_neigh 3 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
+$ python nn_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_map --use_delta --obs_len 20 --pred_len 30 --n_neigh 3 --model_path saved_models/nn_model_map_prior.pkl --traj_save_path saved_traj/nn_traj_map_prior.pkl
 ```
 
 Neither map nor social:
 ```
-$ python nn_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --normalize --use_delta --obs_len 20 --pred_len 30 --n_neigh 9 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
+$ python nn_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --normalize --use_delta --obs_len 20 --pred_len 30 --n_neigh 9 --model_path saved_models/nn_model_none.pkl --traj_save_path saved_traj/nn_traj_none.pkl
 ```
 
 | Component | Mode | Baseline | Runtime |
@@ -122,17 +126,17 @@ $ python nn_train_test.py --train_features <path/to/train/features> --val_featur
 
 Using Map prior:
 ```
-$ python lstm_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --model_path <path/to/saved/checkpoint> --use_map --use_delta --obs_len 20 --pred_len 30 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
+$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_map --use_delta --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar 
 ```
 
 Using Social features:
 ```
-$ python lstm_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --model_path <path/to/saved/checkpoint> --use_social --use_delta --normalize --obs_len 20 --pred_len 30 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
+$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_social --use_delta --normalize --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar
 ```
 
 Neither map nor social:
 ```
-$ python lstm_train_test.py --train_features <path/to/train/features> --val_features <path/to/val/features> --test_features <path/to/test/features> --model_path <path/to/saved/checkpoint> --use_delta --normalize --obs_len 20 --pred_len 30 --model_path <pkl/file/path/for/model> --traj_save_path <pkl/file/for/forecasted/trajectories>
+$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_delta --normalize --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar
 ```
 
 | Component | Mode | Baseline | Runtime |
@@ -144,6 +148,10 @@ $ python lstm_train_test.py --train_features <path/to/train/features> --val_feat
 | LSTM (`lstm_train_test.py`) | train | Neither Social nor Map | 5.5 hrs |
 | LSTM (`lstm_train_test.py`) | test | Neither Social nor Map | 0.1 hr |
 ---
+
+Also tested on Google Cloud Platform:
+1 NVIDIA K80 GPU,
+4 vCPUs - 15GB RAM 
 
 ### 3) Metrics and visualization
 
@@ -193,15 +201,3 @@ Some sample results are shown below
 |:-------------------------:|:-------------------------:|
 | ![](images/lane_change.png) | ![](images/map_for_reference_1.png) |
 | ![](images/right_straight.png) | ![](images/map_for_reference_2.png) |
-
-
----
-
-## Contributing
-Contributions are always welcome! Please be aware of our [contribution guidelines for this project](CONTRIBUTING.md).
-
----
-
-## License
-
-The repository is released under **BSD-3-Clause-Clear License**. Please be aware of the constraints. See **[LICENSE](./LICENSE)**
