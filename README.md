@@ -1,11 +1,9 @@
 [![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
 
 
-# Argoverse Motion Forecasting Baselines
+# Motion Forecasting for Autonomous Vehicles using the Argoverse Motion Forecasting Dataset
 
-> Official GitHub repository for [Argoverse](https://www.argoverse.org) Motion Forecasting Baselines. This repository is released under **BSD-3-Clause-Clear License**.
-
----
+> Official GitHub repository for [Argoverse](https://www.argoverse.org) Motion Forecasting Baselines.
 
 ## Table of Contents
 
@@ -23,13 +21,39 @@
 Requires Linux, git, and Python 3.6+
 
 ### 1) Setup Argoverse API
+Download argoverse-api
+```
+git clone https://github.com/argoai/argoverse-api.git
+pip install -e argoverse-api
+```
 
-Follow instructions on Argoverse [repository](https://github.com/argoai/argoverse-api.git)
-to setup Argoverse API. Make sure the map files are downloaded to the root directory of argoverse repo.
+For literals, install mypy 
+```
+pip install mypy
+```
 
-### 2) Download Argoverse-Forecasting
+Download HD Maps 
+```cd argoverse-api/
+wget https://s3.amazonaws.com/argoai-argoverse/hd_maps.tar.gz
+tar -xvf hd_maps.tar.gz
+rm hd_maps.tar.gz
+```
 
-Argoverse provides both the full dataset and the sample version of the dataset for testing purposes. Head to [their website](https://www.argoverse.org/data.html#download-link) to see the download option.
+### 2) Download Deep-Prediction Repository
+```
+cd ~/
+git clone https://github.com/sapan-ostic/deep_prediction.git
+cd deep_prediction/
+```
+
+Install the packages mentioned in `requirements.txt`
+```
+pip install -r requirements.txt
+```
+
+Argoverse provides both the full dataset, computed features and the sample version of the dataset. Head to [their website](https://www.argoverse.org/data.html#download-link) to see the download option.
+Here, we use pre-trained features.
+
 
 ### 3) Install dependencies
 Install the packages mentioned in `requirements.txt`
