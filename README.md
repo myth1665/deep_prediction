@@ -3,8 +3,6 @@
 
 # Motion Forecasting for Autonomous Vehicles using the Argoverse Motion Forecasting Dataset
 
-> Official GitHub repository for [Argoverse](https://www.argoverse.org) Motion Forecasting Baselines.
-
 ## Table of Contents
 
 > If you have any questions, feel free to open a [GitHub issue](https://github.com/jagjeet-singh/argoverse-forecasting/issues) describing the problem.
@@ -89,8 +87,6 @@ rm forecasting_sample_v1.1.tar.gz
 Running Motion Forecasting baselines has the below 3 components. The runtimes observed on a p2.8xlarge instance (8 NVIDIA K80 GPUs, 32 vCPUs and 488 GiB RAM) are also provided for each part:
 
 ### 1) Run forecasting baselines (`const_vel_train_test.py`, `nn_train_test.py`, `lstm_train_test.py`)
-
-Once the features have been computed, we can run any of the below baselines. 
 
 #### Constant Velocity:
 
