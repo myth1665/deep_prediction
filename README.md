@@ -14,85 +14,10 @@
 
 > If you have any questions, feel free to open a [GitHub issue](https://github.com/jagjeet-singh/argoverse-forecasting/issues) describing the problem.
 
-- [Installation](#installation)
+- [Installation](https://github.com/sapan-ostic/deep_prediction/wiki/Installations)
 - [Usage](#usage)
-
+- [GCP Instructions](https://github.com/sapan-ostic/deep_prediction/wiki/General GCP Instructions)
 ---
-
-## General GCP Instructions
-View general GCP instructions here [General GCP Instructions](GCP_Instructions.md).
-
----
-
-## Installation
-
-Requires Linux, git, and Python 3.6+
-
-### 1) Setup Argoverse API
-Download argoverse-api
-```
-git clone https://github.com/argoai/argoverse-api.git
-pip install -e argoverse-api
-```
-
-For literals, install mypy 
-```
-pip install mypy
-```
-
-Download HD Maps 
-```cd argoverse-api/
-wget https://s3.amazonaws.com/argoai-argoverse/hd_maps.tar.gz
-tar -xvf hd_maps.tar.gz
-rm hd_maps.tar.gz
-```
-Your directory will look like this:
-```
-argoverse-api
-    └── data_loading
-    └── evaluation
-    └── map_representation
-    └── utils
-    └── visualization
-└── map_files
-└── license
-...
-```
-
-### 2) Download Deep-Prediction Repository
-```
-cd ~/
-git clone https://github.com/sapan-ostic/deep_prediction.git
-cd deep_prediction/
-```
-
-Install the packages mentioned in `requirements.txt`
-```
-pip install -r requirements.txt
-```
-
-### 2) Download Data
-Argoverse provides both the full dataset, computed features and the sample version of the dataset. Head to [their website](https://www.argoverse.org/data.html#download-link) to see the download option.
-Here, we use pre-trained features.
-```
-mkdir features
-cd features/
-```
-To Download argoverse features run the following commands in the terminal:
-```
-wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1tsMMMxwAQiixUYlc9cC4iaCCjUAdbzFT' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1tsMMMxwAQiixUYlc9cC4iaCCjUAdbzFT" -O forecasting_features_val.pkl && rm -rf /tmp/cookies.txt 
-
-wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1kCUZHOvEN_HcN07QEeXRPh2tdCS7j0kc' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1kCUZHOvEN_HcN07QEeXRPh2tdCS7j0kc" -O forecasting_features_train.pkl && rm -rf /tmp/cookies.txt
-
-wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1kBj2C08T1mEn1eT_q30Aoudjg9uTH89z' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1kBj2C08T1mEn1eT_q30Aoudjg9uTH89z" -O forecasting_features_test.pkl && rm -rf /tmp/cookies.txt
-```
-Download Forecasting Samples
-```
-cd ..
-wget https://s3.amazonaws.com/argoai-argoverse/forecasting_sample_v1.1.tar.gz
-tar -xvf forecasting_sample_v1.1.tar.gz
-rm forecasting_sample_v1.1.tar.gz
-```
 
 ## Usage
 
