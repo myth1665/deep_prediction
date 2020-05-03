@@ -1,134 +1,73 @@
-[![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
+# Social GAN
 
+This is the code for the paper
 
-# Motion Forecasting for Autonomous Vehicles using the Argoverse Motion Forecasting Dataset
+**<a href="https://arxiv.org/abs/1803.10892">Social GAN: Socially Acceptable Trajectories with Generative Adversarial Networks</a>**
+<br>
+<a href="http://web.stanford.edu/~agrim/">Agrim Gupta</a>,
+<a href="http://cs.stanford.edu/people/jcjohns/">Justin Johnson</a>,
+<a href="http://vision.stanford.edu/feifeili/">Fei-Fei Li</a>,
+<a href="http://cvgl.stanford.edu/silvio/">Silvio Savarese</a>,
+<a href="http://web.stanford.edu/~alahi/">Alexandre Alahi</a>
+<br>
+Presented at [CVPR 2018](http://cvpr2018.thecvf.com/)
 
-### Official Argoverse Links:
-1) [Argoverse-API](https://github.com/argoai/argoverse-api.git)
-2) [Argoverse-Forecasting Baselines](https://github.com/jagjeet-singh/argoverse-forecasting)
-3) [Datasets](https://www.argoverse.org/data.html#download-link)
+Human motion is interpersonal, multimodal and follows social conventions. In this paper, we tackle this problem by combining tools from sequence prediction and generative adversarial networks: a recurrent sequence-to-sequence model observes motion histories and predicts future behavior, using a novel pooling mechanism to aggregate information across
+people.
 
----
+Below we show an examples of socially acceptable predictions made by our model in complex scenarios. Each person is denoted by a different color. We denote observed trajectory by dots and predicted trajectory by stars.
+<div align='center'>
+<img src="images/2.gif"></img>
+<img src="images/3.gif"></img>
+</div>
 
-## Table of Contents
-
-> If you have any questions, feel free to open a [GitHub issue](https://github.com/jagjeet-singh/argoverse-forecasting/issues) describing the problem.
-
-- [Installation](https://github.com/sapan-ostic/deep_prediction/wiki/Installations)
-- [Usage](#usage)
-- [GCP Instructions](https://github.com/sapan-ostic/deep_prediction/wiki/)
----
-
-## Usage
-
-Running Motion Forecasting baselines has the below 3 components. The runtimes observed on a p2.8xlarge instance (8 NVIDIA K80 GPUs, 32 vCPUs and 488 GiB RAM) are also provided for each part:
-
-### 1) Run forecasting baselines (`const_vel_train_test.py`, `nn_train_test.py`, `lstm_train_test.py`)
-
-#### Constant Velocity:
-
+If you find this code useful in your research then please cite
 ```
-$ python const_vel_train_test.py --test_features features/forecasting_features_test.pkl --obs_len 20 --pred_len 30 --traj_save_path saved_traj/const_vel.pkl
-```
-
-| Component | Mode | Runtime |
-| --- | --- | --- |
-| Constant Velocity (`const_vel_train_test.py`) | train+test | less than 1 min |
-
-
-#### K-Nearest Neighbors:
-
-Using Map prior:
-```
-$ python nn_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_map --use_delta --obs_len 20 --pred_len 30 --n_neigh 3 --model_path saved_models/nn_model_map_prior.pkl --traj_save_path saved_traj/nn_traj_map_prior.pkl
+@inproceedings{gupta2018social,
+  title={Social GAN: Socially Acceptable Trajectories with Generative Adversarial Networks},
+  author={Gupta, Agrim and Johnson, Justin and Fei-Fei, Li and Savarese, Silvio and Alahi, Alexandre},
+  booktitle={IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  number={CONF},
+  year={2018}
+}
 ```
 
-Neither map nor social:
-```
-$ python nn_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --normalize --use_delta --obs_len 20 --pred_len 30 --n_neigh 9 --model_path saved_models/nn_model_none.pkl --traj_save_path saved_traj/nn_traj_none.pkl
-```
+## Model
+Our model consists of three key components: Generator (G), Pooling Module (PM) and Discriminator (D). G is based on encoder-decoder framework where we link the hidden states of encoder and decoder via PM. G takes as input trajectories of all people involved in a scene and outputs corresponding predicted trajectories. D inputs the entire sequence comprising both input trajectory and future prediction and classifies them as “real/fake”.
 
-| Component | Mode | Baseline | Runtime |
-| --- | --- | --- | --- |
-| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Map prior | 3.2 hrs |
-| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Niether map nor social | 0.5 hrs | 
+<div align='center'>
+  <img src='images/model.png' width='1000px'>
+</div>
 
-#### LSTM:
+## Setup
+All code was developed and tested on Ubuntu 16.04 with Python 3.5 and PyTorch 0.4.
 
-Using Map prior:
-```
-$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_map --use_delta --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar 
-```
+You can setup a virtual environment to run the code like this:
 
-Using Social features:
-```
-$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_social --use_delta --normalize --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar
-```
-
-Neither map nor social:
-```
-$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_delta --normalize --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar
+```bash
+python3 -m venv env               # Create a virtual environment
+source env/bin/activate           # Activate virtual environment
+pip install -r requirements.txt   # Install dependencies
+echo $PWD > env/lib/python3.5/site-packages/sgan.pth  # Add current directory to python path
+# Work for a while ...
+deactivate  # Exit virtual environment
 ```
 
-| Component | Mode | Baseline | Runtime |
-| --- | --- | --- | --- |
-| LSTM (`lstm_train_test.py`) | train | Map prior | 2 hrs |
-| LSTM (`lstm_train_test.py`) | test | Map prior | 1.5 hrs |
-| LSTM (`lstm_train_test.py`) | train | Social | 5.5 hrs |
-| LSTM (`lstm_train_test.py`) | test | Social | 0.1 hr |
-| LSTM (`lstm_train_test.py`) | train | Neither Social nor Map | 5.5 hrs |
-| LSTM (`lstm_train_test.py`) | test | Neither Social nor Map | 0.1 hr |
----
+## Pretrained Models
+You can download pretrained models by running the script `bash scripts/download_models.sh`. This will download the following models:
 
-Also tested on Google Cloud Platform:
-1 NVIDIA K80 GPU,
-4 vCPUs - 15GB RAM 
+- `sgan-models/<dataset_name>_<pred_len>.pt`: Contains 10 pretrained models for all five datasets. These models correspond to SGAN-20V-20 in Table 1.
+- `sgan-p-models/<dataset_name>_<pred_len>.pt`: Contains 10 pretrained models for all five datasets. These models correspond to SGAN-20VP-20 in Table 1.
 
-### 3) Metrics and visualization
+Please refer to [Model Zoo](MODEL_ZOO.md) for results.
 
-#### Evaluation metrics
+## Running Models
+You can use the script `scripts/evaluate_model.py` to easily run any of the pretrained models on any of the datsets. For example you can replicate the Table 1 results for all datasets for SGAN-20V-20 like this:
 
-Here we compute the metric values for the given trajectories. Since ground truth trajectories for the test set have not been released, you can run the evaluation on the val set. If doing so, make sure you don't train any of the above baselines on val set.
-
-Some examples:
-
-Evaluating a baseline that didn't use map and allowing 6 guesses
-```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --max_n_guesses 6
+```bash
+python scripts/evaluate_model.py \
+  --model_path models/sgan-models
 ```
 
-Evaluating a baseline that used map prior and allowing 1 guesses along each of the 9 centerlines
-```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --n_guesses_cl 1 --n_cl 9 --max_neighbors_cl 3
-```
-
-Evaluating a K-NN baseline that can use map for pruning and allowing 6 guesses
-```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --prune_n_guesses 6
-```
-
-It will print out something like
-```
-------------------------------------------------
-Prediction Horizon : 30, Max #guesses (K): 1
-------------------------------------------------
-minADE: 3.533317191869932
-minFDE: 7.887520305278937
-DAC: 0.8857479236783845
-Miss Rate: 0.9290787402582446
-------------------------------------------------
-```
-
-#### Visualization
-
-Here we visualize the forecasted trajectories
-
-```
-python eval_forecasting_helper.py --viz --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --features <path/to/test/features>
-```
-Some sample results are shown below
-
-| | |
-|:-------------------------:|:-------------------------:|
-| ![](images/lane_change.png) | ![](images/map_for_reference_1.png) |
-| ![](images/right_straight.png) | ![](images/map_for_reference_2.png) |
+## Training new models
+Instructions for training new models can be [found here](TRAINING.md).
