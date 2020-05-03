@@ -323,33 +323,48 @@ def main(args):
                 checkpoint['sample_ts'].append(t)
 
                 # Check stats on the validation set
-#                 logger.info('Checking stats on val ...')
-#                 metrics_val = check_accuracy(args, val_loader, generator, discriminator, d_loss_fn)
+                logger.info('Checking stats on val ...')
+                metrics_val = check_accuracy(args, val_loader, generator, discriminator, d_loss_fn, limit=True)
                 
-#                 logger.info('Checking stats on train ...')
-#                 metrics_train = check_accuracy(args, train_loader, generator, discriminator, d_loss_fn, limit=True)
+                logger.info('Checking stats on train ...')
+                metrics_train = check_accuracy(args, train_loader, generator, discriminator, d_loss_fn, limit=True)
 
-#                 for k, v in sorted(metrics_val.items()):
-#                     logger.info('  [val] {}: {:.3f}'.format(k, v))
-#                     checkpoint['metrics_val'][k].append(v)
-#                 for k, v in sorted(metrics_train.items()):
-#                     logger.info('  [train] {}: {:.3f}'.format(k, v))
-#                     checkpoint['metrics_train'][k].append(v)
+                for k, v in sorted(metrics_val.items()):
+                    logger.info('  [val] {}: {:.3f}'.format(k, v))
+                    checkpoint['metrics_val'][k].append(v)
+                    
+                writer.add_scalar('val_ade', metrics_val['ade'], t)
+                writer.add_scalar('val_ade_l', metrics_val['ade_l'], t)
+                writer.add_scalar('val_ade_nl', metrics_val['ade_nl'], t)
+                writer.add_scalar('val_fde', metrics_val['fde'], t)
+                writer.add_scalar('val_fde_l', metrics_val['fde_l'], t)
+                writer.add_scalar('val_fde_nl', metrics_val['fde_nl'], t)
+                
+                for k, v in sorted(metrics_train.items()):
+                    logger.info('  [train] {}: {:.3f}'.format(k, v))
+                    checkpoint['metrics_train'][k].append(v)
+                
+                writer.add_scalar('val_ade', metrics_train['ade'], t)
+                writer.add_scalar('val_ade_l', metrics_train['ade_l'], t)
+                writer.add_scalar('val_ade_nl', metrics_train['ade_nl'], t)
+                writer.add_scalar('val_fde', metrics_train['fde'], t)
+                writer.add_scalar('val_fde_l', metrics_train['fde_l'], t)
+                writer.add_scalar('val_fde_nl', metrics_train['fde_nl'], t)
+                
+                min_ade = min(checkpoint['metrics_val']['ade'])
+                min_ade_nl = min(checkpoint['metrics_val']['ade_nl'])
 
-#                 min_ade = min(checkpoint['metrics_val']['ade'])
-#                 min_ade_nl = min(checkpoint['metrics_val']['ade_nl'])
+                if metrics_val['ade'] == min_ade:
+                    logger.info('New low for avg_disp_error')
+                    checkpoint['best_t'] = t
+                    checkpoint['g_best_state'] = generator.state_dict()
+                    checkpoint['d_best_state'] = discriminator.state_dict()
 
-#                 if metrics_val['ade'] == min_ade:
-#                     logger.info('New low for avg_disp_error')
-#                     checkpoint['best_t'] = t
-#                     checkpoint['g_best_state'] = generator.state_dict()
-#                     checkpoint['d_best_state'] = discriminator.state_dict()
-
-#                 if metrics_val['ade_nl'] == min_ade_nl:
-#                     logger.info('New low for avg_disp_error_nl')
-#                     checkpoint['best_t_nl'] = t
-#                     checkpoint['g_best_nl_state'] = generator.state_dict()
-#                     checkpoint['d_best_nl_state'] = discriminator.state_dict()
+                if metrics_val['ade_nl'] == min_ade_nl:
+                    logger.info('New low for avg_disp_error_nl')
+                    checkpoint['best_t_nl'] = t
+                    checkpoint['g_best_nl_state'] = generator.state_dict()
+                    checkpoint['d_best_nl_state'] = discriminator.state_dict()
 
                 # Save another checkpoint with model weights and
                 # optimizer state
@@ -598,7 +613,7 @@ def poly_fit(traj, traj_len=30, threshold=0.002):
     else:
         return 0.0
     
-def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=False):
+def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=True):
     d_losses = []
     metrics = {}
     g_l2_losses_abs, g_l2_losses_rel = ([],) * 2
@@ -609,8 +624,7 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=Fals
     generator.eval()
     
     with torch.no_grad():
-        for batch in loader:
-            
+        for batch in loader:      
             train_agent = batch['train_agent']
             gt_agent = batch['gt_agent']
             neighbour = batch['neighbour']
@@ -672,8 +686,8 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=Fals
             
             linear_ped = 1 - non_linear_ped
             
-            loss_mask = torch.ones(2, 50)
-            loss_mask = loss_mask[:, args.obs_len:].cuda()
+            loss_mask = torch.ones(pred_traj_gt.shape[1],30).cuda()
+#             loss_mask = loss_mask[:, args.obs_len:].cuda()
 
             pred_traj_fake_rel = generator(obs_traj, obs_traj_rel, seq_start_end)
             pred_traj_fake = relative_to_abs(pred_traj_fake_rel, obs_traj[-1])
@@ -682,9 +696,9 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=Fals
                 pred_traj_gt, pred_traj_gt_rel, pred_traj_fake,
                 pred_traj_fake_rel, loss_mask
             )
-            ade, ade_l, ade_nl = cal_ade(pred_traj_gt, pred_traj_fake, linear_ped, non_linear_ped)
+            ade, ade_l, ade_nl = cal_ade(pred_traj_gt[:,0,:].unsqueeze(0), pred_traj_fake[:,0,:].unsqueeze(0), linear_ped[0], non_linear_ped[0])
 
-            fde, fde_l, fde_nl = cal_fde(pred_traj_gt, pred_traj_fake, linear_ped, non_linear_ped)
+            fde, fde_l, fde_nl = cal_fde(pred_traj_gt[:,0,:].unsqueeze(0), pred_traj_fake[:,0,:].unsqueeze(0), linear_ped[0], non_linear_ped[0])
 
             traj_real = torch.cat([obs_traj, pred_traj_gt], dim=0)
             traj_real_rel = torch.cat([obs_traj_rel, pred_traj_gt_rel], dim=0)
@@ -710,6 +724,8 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=Fals
             total_traj += pred_traj_gt.size(1)
             total_traj_l += torch.sum(linear_ped).item()
             total_traj_nl += torch.sum(non_linear_ped).item()
+            
+            logger.info('limit = {}, total_traj = {}, num_samples_check = {}'.format(limit, total_traj, args.num_samples_check))
             if limit and total_traj >= args.num_samples_check:
                 break
 
