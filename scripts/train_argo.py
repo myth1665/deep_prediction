@@ -344,12 +344,12 @@ def main(args):
                     logger.info('  [train] {}: {:.3f}'.format(k, v))
                     checkpoint['metrics_train'][k].append(v)
                 
-                writer.add_scalar('val_ade', metrics_train['ade'], t)
-                writer.add_scalar('val_ade_l', metrics_train['ade_l'], t)
-                writer.add_scalar('val_ade_nl', metrics_train['ade_nl'], t)
-                writer.add_scalar('val_fde', metrics_train['fde'], t)
-                writer.add_scalar('val_fde_l', metrics_train['fde_l'], t)
-                writer.add_scalar('val_fde_nl', metrics_train['fde_nl'], t)
+                writer.add_scalar('train_ade', metrics_train['ade'], t)
+                writer.add_scalar('train_ade_l', metrics_train['ade_l'], t)
+                writer.add_scalar('train_ade_nl', metrics_train['ade_nl'], t)
+                writer.add_scalar('train_fde', metrics_train['fde'], t)
+                writer.add_scalar('train_fde_l', metrics_train['fde_l'], t)
+                writer.add_scalar('train_fde_nl', metrics_train['fde_nl'], t)
                 
                 min_ade = min(checkpoint['metrics_val']['ade'])
                 min_ade_nl = min(checkpoint['metrics_val']['ade_nl'])
@@ -725,7 +725,7 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=True
             total_traj_l += torch.sum(linear_ped).item()
             total_traj_nl += torch.sum(non_linear_ped).item()
             
-            logger.info('limit = {}, total_traj = {}, num_samples_check = {}'.format(limit, total_traj, args.num_samples_check))
+#             logger.info('limit = {}, total_traj = {}, num_samples_check = {}'.format(limit, total_traj, args.num_samples_check))
             if limit and total_traj >= args.num_samples_check:
                 break
 
