@@ -25,12 +25,12 @@ python train_argo.py \
   --d_steps 2 \
   --checkpoint_every 10 \
   --print_every 50 \
-  --num_iterations 20000 \
+  --num_iterations 50000 \
   --num_epochs 500 \
   --pooling_type 'pool_net' \
   --clipping_threshold_g 1.5 \
   --best_k 10 \
   --gpu_num 0 \
   --checkpoint_name gan_test \
-  --restore_from_checkpoint 0 \
+  --restore_from_checkpoint 1 \
   --num_samples_check 1000

@@ -42,13 +42,14 @@ def collate_traj_social(list_data):
     gt_agent=[]
     neighbour=[]
     neighbour_gt=[]
+    seq_path=[]
     for data in list_data:
         train_agent.append(data['train_agent'])
         gt_agent.append(data['gt_agent'])
         neighbour.append(data['neighbour'])
         neighbour_gt.append(data['neighbour_gt'])
-    
-    return {'train_agent': torch.stack(train_agent,dim=0),'gt_agent': torch.stack(gt_agent) , 'neighbour':neighbour, 'neighbour_gt':neighbour_gt} 
+        seq_path.append(data['seq_path'])    
+    return {'seq_path': seq_path, 'train_agent': torch.stack(train_agent,dim=0),'gt_agent': torch.stack(gt_agent) , 'neighbour':neighbour, 'neighbour_gt':neighbour_gt} 
 
 def collate_traj_social_test(list_data):
     seq_index=[]
