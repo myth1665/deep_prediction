@@ -32,5 +32,5 @@ python train_argo.py \
   --best_k 10 \
   --gpu_num 0 \
   --checkpoint_name gan_test \
-  --restore_from_checkpoint 1 \
+  --restore_from_checkpoint 0 \
   --num_samples_check 1000

@@ -73800,3 +73800,135 @@ Terminated
 [INFO: train_argo.py:  380]: Done.
 [INFO: train_argo.py:  386]: Saving checkpoint to /home/sapanagrawal777/sgan/scripts/gan_test_no_model.pt
 [INFO: train_argo.py:  397]: Done.
+Traceback (most recent call last):
+  File "train_argo.py", line 22, in <module>
+    from sgan.data.data import Argoverse_Social_Data, collate_traj_social
+  File "/home/rishi_tejamadduri/sgan/scripts/sgan/data/data.py", line 1, in <module>
+    from argoverse.map_representation.map_api import ArgoverseMap
+ModuleNotFoundError: No module named 'argoverse'
+[INFO: train_argo.py:  156]: There are 3217.84375 iterations per epoch
+[INFO: train_argo.py:  180]: Here is the generator:
+[INFO: train_argo.py:  181]: TrajectoryGenerator(
+  (encoder): Encoder(
+    (encoder): LSTM(16, 32)
+    (spatial_embedding): Linear(in_features=2, out_features=16, bias=True)
+  )
+  (decoder): Decoder(
+    (decoder): LSTM(16, 32)
+    (spatial_embedding): Linear(in_features=2, out_features=16, bias=True)
+    (hidden2pos): Linear(in_features=32, out_features=2, bias=True)
+  )
+  (pool_net): PoolHiddenNet(
+    (spatial_embedding): Linear(in_features=2, out_features=16, bias=True)
+    (mlp_pre_pool): Sequential(
+      (0): Linear(in_features=48, out_features=512, bias=True)
+      (1): ReLU()
+      (2): Linear(in_features=512, out_features=32, bias=True)
+      (3): ReLU()
+    )
+  )
+  (mlp_decoder_context): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=64, out_features=24, bias=True)
+    (3): ReLU()
+  )
+)
+[INFO: train_argo.py:  196]: Here is the discriminator:
+[INFO: train_argo.py:  197]: TrajectoryDiscriminator(
+  (encoder): Encoder(
+    (encoder): LSTM(16, 64)
+    (spatial_embedding): Linear(in_features=2, out_features=16, bias=True)
+  )
+  (real_classifier): Sequential(
+    (0): Linear(in_features=64, out_features=64, bias=True)
+    (1): ReLU()
+    (2): Linear(in_features=64, out_features=1, bias=True)
+    (3): ReLU()
+  )
+)
+[INFO: train_argo.py:  263]: Starting epoch 1
+[INFO: train_argo.py:  304]: t = 1 / 1608921
+[INFO: train_argo.py:  306]:   [D] D_data_loss: 1.373
+[INFO: train_argo.py:  306]:   [D] D_total_loss: 1.373
+[INFO: train_argo.py:  309]:   [G] G_discriminator_loss: 0.693
+[INFO: train_argo.py:  309]:   [G] G_l2_loss_rel: 2.149
+[INFO: train_argo.py:  309]:   [G] G_total_loss: 2.843
+[INFO: train_argo.py:  328]: Checking stats on val ...
+[INFO: train_argo.py:  331]: Checking stats on train ...
+[INFO: train_argo.py:  335]:   [val] ade: 0.130
+[INFO: train_argo.py:  335]:   [val] ade_l: 24.078
+[INFO: train_argo.py:  335]:   [val] ade_nl: 0.131
+[INFO: train_argo.py:  335]:   [val] d_loss: 1.210
+[INFO: train_argo.py:  335]:   [val] fde: 3.901
+[INFO: train_argo.py:  335]:   [val] fde_l: 722.334
+[INFO: train_argo.py:  335]:   [val] fde_nl: 3.923
+[INFO: train_argo.py:  335]:   [val] g_l2_loss_abs: 319.564
+[INFO: train_argo.py:  335]:   [val] g_l2_loss_rel: 319.564
+[INFO: train_argo.py:  346]:   [train] ade: 0.140
+[INFO: train_argo.py:  346]:   [train] ade_l: 82.691
+[INFO: train_argo.py:  346]:   [train] ade_nl: 0.140
+[INFO: train_argo.py:  346]:   [train] d_loss: 1.265
+[INFO: train_argo.py:  346]:   [train] fde: 4.201
+[INFO: train_argo.py:  346]:   [train] fde_l: 2480.735
+[INFO: train_argo.py:  346]:   [train] fde_nl: 4.208
+[INFO: train_argo.py:  346]:   [train] g_l2_loss_abs: 219.363
+[INFO: train_argo.py:  346]:   [train] g_l2_loss_rel: 219.363
+[INFO: train_argo.py:  360]: New low for avg_disp_error
+[INFO: train_argo.py:  366]: New low for avg_disp_error_nl
+[INFO: train_argo.py:  380]: Saving checkpoint to ../saved_model/07-05-2020::19:37:23/gan_test_with_model.pt
+[INFO: train_argo.py:  382]: Done.
+[INFO: train_argo.py:  388]: Saving checkpoint to ../saved_model/07-05-2020::19:37:23/gan_test_no_model.pt
+[INFO: train_argo.py:  399]: Done.
+[INFO: train_argo.py:  328]: Checking stats on val ...
+[INFO: train_argo.py:  331]: Checking stats on train ...
+[INFO: train_argo.py:  335]:   [val] ade: 0.151
+[INFO: train_argo.py:  335]:   [val] ade_l: 174.959
+[INFO: train_argo.py:  335]:   [val] ade_nl: 0.151
+[INFO: train_argo.py:  335]:   [val] d_loss: 1.177
+[INFO: train_argo.py:  335]:   [val] fde: 4.525
+[INFO: train_argo.py:  335]:   [val] fde_l: 5248.766
+[INFO: train_argo.py:  335]:   [val] fde_nl: 4.529
+[INFO: train_argo.py:  335]:   [val] g_l2_loss_abs: 237.685
+[INFO: train_argo.py:  335]:   [val] g_l2_loss_rel: 237.685
+[INFO: train_argo.py:  346]:   [train] ade: 0.096
+[INFO: train_argo.py:  346]:   [train] ade_l: 32.430
+[INFO: train_argo.py:  346]:   [train] ade_nl: 0.096
+[INFO: train_argo.py:  346]:   [train] d_loss: 1.118
+[INFO: train_argo.py:  346]:   [train] fde: 2.881
+[INFO: train_argo.py:  346]:   [train] fde_l: 972.885
+[INFO: train_argo.py:  346]:   [train] fde_nl: 2.890
+[INFO: train_argo.py:  346]:   [train] g_l2_loss_abs: 268.721
+[INFO: train_argo.py:  346]:   [train] g_l2_loss_rel: 268.721
+[INFO: train_argo.py:  380]: Saving checkpoint to ../saved_model/07-05-2020::19:37:23/gan_test_with_model.pt
+[INFO: train_argo.py:  382]: Done.
+[INFO: train_argo.py:  388]: Saving checkpoint to ../saved_model/07-05-2020::19:37:23/gan_test_no_model.pt
+[INFO: train_argo.py:  399]: Done.
+[INFO: train_argo.py:  328]: Checking stats on val ...
+[INFO: train_argo.py:  331]: Checking stats on train ...
+[INFO: train_argo.py:  335]:   [val] ade: 0.130
+[INFO: train_argo.py:  335]:   [val] ade_l: 23.339
+[INFO: train_argo.py:  335]:   [val] ade_nl: 0.130
+[INFO: train_argo.py:  335]:   [val] d_loss: 0.945
+[INFO: train_argo.py:  335]:   [val] fde: 3.893
+[INFO: train_argo.py:  335]:   [val] fde_l: 700.161
+[INFO: train_argo.py:  335]:   [val] fde_nl: 3.915
+[INFO: train_argo.py:  335]:   [val] g_l2_loss_abs: 264.325
+[INFO: train_argo.py:  335]:   [val] g_l2_loss_rel: 264.325
+[INFO: train_argo.py:  346]:   [train] ade: 0.062
+[INFO: train_argo.py:  346]:   [train] ade_l: 74.673
+[INFO: train_argo.py:  346]:   [train] ade_nl: 0.062
+[INFO: train_argo.py:  346]:   [train] d_loss: 0.842
+[INFO: train_argo.py:  346]:   [train] fde: 1.872
+[INFO: train_argo.py:  346]:   [train] fde_l: 2240.199
+[INFO: train_argo.py:  346]:   [train] fde_nl: 1.873
+[INFO: train_argo.py:  346]:   [train] g_l2_loss_abs: 279.252
+[INFO: train_argo.py:  346]:   [train] g_l2_loss_rel: 279.252
+[INFO: train_argo.py:  360]: New low for avg_disp_error
+[INFO: train_argo.py:  366]: New low for avg_disp_error_nl
+[INFO: train_argo.py:  380]: Saving checkpoint to ../saved_model/07-05-2020::19:37:23/gan_test_with_model.pt
+[INFO: train_argo.py:  382]: Done.
+[INFO: train_argo.py:  388]: Saving checkpoint to ../saved_model/07-05-2020::19:37:23/gan_test_no_model.pt
+[INFO: train_argo.py:  399]: Done.
+[INFO: train_argo.py:  328]: Checking stats on val ...
+[INFO: train_argo.py:  331]: Checking stats on train ...

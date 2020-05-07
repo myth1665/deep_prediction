@@ -38,7 +38,9 @@ dataset_name = 'argoverse'
 model_name = 'sgan'
 
 wr_dir = '../runs/' + dataset_name + '/' + model_name + '/' + dt_string + '/'
+model_save_dir = '../saved_model/'+ dt_string + '/'
 os.makedirs(wr_dir, exist_ok=True)
+os.makedirs(model_save_dir, exist_ok=True)
 
 # Writer for tensorboard
 writer = SummaryWriter(wr_dir)
@@ -373,7 +375,7 @@ def main(args):
                 checkpoint['d_state'] = discriminator.state_dict()
                 checkpoint['d_optim_state'] = optimizer_d.state_dict()
                 checkpoint_path = os.path.join(
-                    args.output_dir, '%s_with_model.pt' % args.checkpoint_name
+                    model_save_dir, '%s_with_model.pt' % args.checkpoint_name
                 )
                 logger.info('Saving checkpoint to {}'.format(checkpoint_path))
                 torch.save(checkpoint, checkpoint_path)
@@ -382,7 +384,7 @@ def main(args):
                 # Save a checkpoint with no model weights by making a shallow
                 # copy of the checkpoint excluding some items
                 checkpoint_path = os.path.join(
-                    args.output_dir, '%s_no_model.pt' % args.checkpoint_name)
+                    model_save_dir, '%s_no_model.pt' % args.checkpoint_name)
                 logger.info('Saving checkpoint to {}'.format(checkpoint_path))
                 key_blacklist = [
                     'g_state', 'd_state', 'g_best_state', 'g_best_nl_state',
@@ -420,25 +422,53 @@ def discriminator_step(args, batch, generator, discriminator, d_loss_fn, optimiz
     gt_agent = batch['gt_agent']
     neighbour = batch['neighbour']
     neighbour_gt = batch['neighbour_gt']
+    av = batch['av']
+    av_gt = batch['av_gt']
+    seq_path = batch['seq_path']
+    seq_id = batch['indexes']
+    Rs = batch['rotation']
+    ts = batch['translation']
 
     obs_traj = train_agent[0].unsqueeze(0)
+    obs_traj = torch.cat((obs_traj, av[0].unsqueeze(0)),0)
     obs_traj = torch.cat((obs_traj, neighbour[0]),0)
 
     pred_traj_gt = gt_agent[0].unsqueeze(0)
+    pred_traj_gt = torch.cat((pred_traj_gt, av_gt[0].unsqueeze(0)),0)
     pred_traj_gt = torch.cat((pred_traj_gt, neighbour_gt[0]),0)
 
     ped_count = obs_traj.shape[0]
     seq_start_end = [[0, ped_count]] # last number excluded
 
+    non_linear_ped = []
+    _non_linear_ped = [poly_fit(np.array(gt_agent[0]))]
+    _non_linear_ped.append(poly_fit(np.array(av_gt[0])))
+
+    for j in range(ped_count-2):
+        _non_linear_ped.append(poly_fit(np.array(neighbour_gt[0][j])))
+    non_linear_ped += _non_linear_ped
+
     for i in range(1, len(neighbour)):
         obs_traj = torch.cat((obs_traj, train_agent[i].unsqueeze(0)), 0)
+        obs_traj = torch.cat((obs_traj, av[i].unsqueeze(0)),0)
         obs_traj = torch.cat((obs_traj, neighbour[i]), 0)
 
         pred_traj_gt = torch.cat((pred_traj_gt, gt_agent[i].unsqueeze(0)), 0)
+        pred_traj_gt = torch.cat((pred_traj_gt, av_gt[i].unsqueeze(0)),0)
         pred_traj_gt = torch.cat((pred_traj_gt, neighbour_gt[i]), 0)
 
         seq_start_end.append([ped_count, obs_traj.shape[0]])
+
+        num_peds_considered = obs_traj.shape[0] - ped_count
         ped_count = obs_traj.shape[0]
+
+        _non_linear_ped = [poly_fit(np.array(gt_agent[i]))]
+        _non_linear_ped.append(poly_fit(np.array(av_gt[i])))
+
+        for j in range(num_peds_considered-2):
+            _non_linear_ped.append(poly_fit(np.array(neighbour_gt[i][j])))
+
+        non_linear_ped += _non_linear_ped
 
     obs_traj_rel = torch.zeros(obs_traj.shape)
     obs_traj_rel[:,1:,:] = obs_traj[:,1:,:] -  obs_traj[:,:-1,:]    
@@ -447,6 +477,8 @@ def discriminator_step(args, batch, generator, discriminator, d_loss_fn, optimiz
     pred_traj_gt_rel[:,1:,:] = pred_traj_gt[:,1:,:] - pred_traj_gt[:,0:-1,:]
 
     seq_start_end = torch.tensor(seq_start_end)
+    non_linear_ped = torch.tensor(non_linear_ped).cuda()
+
     ## 
     obs_traj = obs_traj.transpose_(0,1).cuda() 
     obs_traj_rel = obs_traj_rel.transpose_(0,1).cuda() 
@@ -496,25 +528,53 @@ def generator_step(args, batch, generator, discriminator, g_loss_fn, optimizer_g
     gt_agent = batch['gt_agent']
     neighbour = batch['neighbour']
     neighbour_gt = batch['neighbour_gt']
+    av = batch['av']
+    av_gt = batch['av_gt']
+    seq_path = batch['seq_path']
+    seq_id = batch['indexes']
+    Rs = batch['rotation']
+    ts = batch['translation']
 
     obs_traj = train_agent[0].unsqueeze(0)
+    obs_traj = torch.cat((obs_traj, av[0].unsqueeze(0)),0)
     obs_traj = torch.cat((obs_traj, neighbour[0]),0)
 
     pred_traj_gt = gt_agent[0].unsqueeze(0)
+    pred_traj_gt = torch.cat((pred_traj_gt, av_gt[0].unsqueeze(0)),0)
     pred_traj_gt = torch.cat((pred_traj_gt, neighbour_gt[0]),0)
 
     ped_count = obs_traj.shape[0]
     seq_start_end = [[0, ped_count]] # last number excluded
 
+    non_linear_ped = []
+    _non_linear_ped = [poly_fit(np.array(gt_agent[0]))]
+    _non_linear_ped.append(poly_fit(np.array(av_gt[0])))
+
+    for j in range(ped_count-2):
+        _non_linear_ped.append(poly_fit(np.array(neighbour_gt[0][j])))
+    non_linear_ped += _non_linear_ped
+
     for i in range(1, len(neighbour)):
         obs_traj = torch.cat((obs_traj, train_agent[i].unsqueeze(0)), 0)
+        obs_traj = torch.cat((obs_traj, av[i].unsqueeze(0)),0)
         obs_traj = torch.cat((obs_traj, neighbour[i]), 0)
 
         pred_traj_gt = torch.cat((pred_traj_gt, gt_agent[i].unsqueeze(0)), 0)
+        pred_traj_gt = torch.cat((pred_traj_gt, av_gt[i].unsqueeze(0)),0)
         pred_traj_gt = torch.cat((pred_traj_gt, neighbour_gt[i]), 0)
 
         seq_start_end.append([ped_count, obs_traj.shape[0]])
+
+        num_peds_considered = obs_traj.shape[0] - ped_count
         ped_count = obs_traj.shape[0]
+
+        _non_linear_ped = [poly_fit(np.array(gt_agent[i]))]
+        _non_linear_ped.append(poly_fit(np.array(av_gt[i])))
+
+        for j in range(num_peds_considered-2):
+            _non_linear_ped.append(poly_fit(np.array(neighbour_gt[i][j])))
+
+        non_linear_ped += _non_linear_ped
 
     obs_traj_rel = torch.zeros(obs_traj.shape)
     obs_traj_rel[:,1:,:] = obs_traj[:,1:,:] -  obs_traj[:,:-1,:]    
@@ -523,6 +583,8 @@ def generator_step(args, batch, generator, discriminator, g_loss_fn, optimizer_g
     pred_traj_gt_rel[:,1:,:] = pred_traj_gt[:,1:,:] - pred_traj_gt[:,0:-1,:]
 
     seq_start_end = torch.tensor(seq_start_end)
+    non_linear_ped = torch.tensor(non_linear_ped).cuda()
+
     ## 
     obs_traj = obs_traj.transpose_(0,1).cuda() 
     obs_traj_rel = obs_traj_rel.transpose_(0,1).cuda() 
@@ -537,14 +599,13 @@ def generator_step(args, batch, generator, discriminator, g_loss_fn, optimizer_g
     g_l2_loss_rel = []
     
     loss_mask = torch.ones(pred_traj_gt.shape[1],30).cuda()
-#     loss_mask = loss_mask[:, args.obs_len:].cuda()
 
     for _ in range(args.best_k):
         generator_out = generator(obs_traj, obs_traj_rel, seq_start_end)
 
         pred_traj_fake_rel = generator_out
         pred_traj_fake = relative_to_abs(pred_traj_fake_rel, obs_traj[-1])
-#         print("l2_loss: ", args.l2_loss_weight * l2_loss(pred_traj_fake_rel, pred_traj_gt_rel, loss_mask, mode='raw'))    
+ 
         if args.l2_loss_weight > 0:
             g_l2_loss_rel.append(args.l2_loss_weight * l2_loss(pred_traj_fake_rel, pred_traj_gt_rel, loss_mask, mode='raw'))
 
@@ -629,11 +690,19 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=True
             gt_agent = batch['gt_agent']
             neighbour = batch['neighbour']
             neighbour_gt = batch['neighbour_gt']
+            av = batch['av']
+            av_gt = batch['av_gt']
+            seq_path = batch['seq_path']
+            seq_id = batch['indexes']
+            Rs = batch['rotation']
+            ts = batch['translation']
 
             obs_traj = train_agent[0].unsqueeze(0)
+            obs_traj = torch.cat((obs_traj, av[0].unsqueeze(0)),0)
             obs_traj = torch.cat((obs_traj, neighbour[0]),0)
 
             pred_traj_gt = gt_agent[0].unsqueeze(0)
+            pred_traj_gt = torch.cat((pred_traj_gt, av_gt[0].unsqueeze(0)),0)
             pred_traj_gt = torch.cat((pred_traj_gt, neighbour_gt[0]),0)
 
             ped_count = obs_traj.shape[0]
@@ -641,16 +710,19 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=True
 
             non_linear_ped = []
             _non_linear_ped = [poly_fit(np.array(gt_agent[0]))]
+            _non_linear_ped.append(poly_fit(np.array(av_gt[0])))
 
-            for j in range(ped_count-1):
+            for j in range(ped_count-2):
                 _non_linear_ped.append(poly_fit(np.array(neighbour_gt[0][j])))
             non_linear_ped += _non_linear_ped
 
             for i in range(1, len(neighbour)):
                 obs_traj = torch.cat((obs_traj, train_agent[i].unsqueeze(0)), 0)
+                obs_traj = torch.cat((obs_traj, av[i].unsqueeze(0)),0)
                 obs_traj = torch.cat((obs_traj, neighbour[i]), 0)
 
                 pred_traj_gt = torch.cat((pred_traj_gt, gt_agent[i].unsqueeze(0)), 0)
+                pred_traj_gt = torch.cat((pred_traj_gt, av_gt[i].unsqueeze(0)),0)
                 pred_traj_gt = torch.cat((pred_traj_gt, neighbour_gt[i]), 0)
 
                 seq_start_end.append([ped_count, obs_traj.shape[0]])
@@ -659,8 +731,9 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=True
                 ped_count = obs_traj.shape[0]
 
                 _non_linear_ped = [poly_fit(np.array(gt_agent[i]))]
+                _non_linear_ped.append(poly_fit(np.array(av_gt[i])))
 
-                for j in range(num_peds_considered-1):
+                for j in range(num_peds_considered-2):
                     _non_linear_ped.append(poly_fit(np.array(neighbour_gt[i][j])))
 
                 non_linear_ped += _non_linear_ped
@@ -673,7 +746,7 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=True
 
             seq_start_end = torch.tensor(seq_start_end)
             non_linear_ped = torch.tensor(non_linear_ped).cuda()
-            
+
             ## 
             obs_traj = obs_traj.transpose_(0,1).cuda() 
             obs_traj_rel = obs_traj_rel.transpose_(0,1).cuda() 
@@ -681,9 +754,7 @@ def check_accuracy(args, loader, generator, discriminator, d_loss_fn, limit=True
             pred_traj_gt_rel = pred_traj_gt_rel.transpose_(0,1).cuda() 
             
             ################################################################
-            
-            
-            
+               
             linear_ped = 1 - non_linear_ped
             
             loss_mask = torch.ones(pred_traj_gt.shape[1],30).cuda()

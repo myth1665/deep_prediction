@@ -42,6 +42,8 @@ def collate_traj_social(list_data):
     gt_agent=[]
     neighbour=[]
     neighbour_gt=[]
+    av=[]
+    av_gt=[]
     seq_path=[]
     idxs=[]
     city_names = []
@@ -52,12 +54,14 @@ def collate_traj_social(list_data):
         gt_agent.append(data['gt_agent'])
         neighbour.append(data['neighbour'])
         neighbour_gt.append(data['neighbour_gt'])
+        av.append(data['av'])
+        av_gt.append(data['av_gt'])
         seq_path.append(data['seq_path'])
         idxs.append(data['indexes'])
         city_names.append(data['city_name'])
         R.append(data['rotation'])
         T.append(data['translation'])
-    return {'city_name': city_names,'indexes': idxs, 'seq_path': seq_path, 'train_agent': torch.stack(train_agent,dim=0),'gt_agent': torch.stack(gt_agent) , 'neighbour':neighbour, 'neighbour_gt':neighbour_gt, 'rotation': R, 'translation': T} 
+    return {'city_name': city_names,'indexes': idxs, 'seq_path': seq_path, 'train_agent': torch.stack(train_agent,dim=0),'gt_agent': torch.stack(gt_agent), 'neighbour':neighbour, 'neighbour_gt':neighbour_gt, 'av':torch.stack(av,dim=0), 'av_gt':torch.stack(av_gt), 'rotation': R, 'translation': T} 
 
 def collate_traj_social_test(list_data):
     seq_index=[]
@@ -174,7 +178,7 @@ class Argoverse_Social_Data(Argoverse_Data):
         super(Argoverse_Social_Data,self).__init__(root_dir,train_seq_size,cuda,test)
         self.agent_rel=agent_rel
 
-    def transform_social(self, agent_trajectory, neighbour_trajectories):
+    def transform_social(self, agent_trajectory, neighbour_trajectories, av_trajectory):
         def rotation_angle(x,y):
             angle=np.arctan(abs(y/x))
             direction= -1* np.sign(x*y)
@@ -193,7 +197,6 @@ class Argoverse_Social_Data(Argoverse_Data):
         agent_trajectory = torch.tensor(agent_trajectory).float()
         
         normalized_neighbour_trajectories=[]
-        # normalized_gt_neighbour_trajectories=[]
         
         for neighbour_trajectory in neighbour_trajectories:
             trajectory=neighbour_trajectory
@@ -206,22 +209,37 @@ class Argoverse_Social_Data(Argoverse_Data):
             if self.agent_rel:
                 trajectory = trajectory - agent_trajectory
             normalized_neighbour_trajectories.append(trajectory)
+         
+        av_trajectory = av_trajectory-trajectory_mean
+        av_trajectory = np.swapaxes(av_trajectory, 1, 0)
+        av_trajectory = np.matmul(R,av_trajectory)
+        av_trajectory = np.swapaxes(av_trajectory, 1, 0)
+        av_trajectory = av_trajectory.astype(float)
+        av_trajectory = torch.tensor(av_trajectory).float()
+            
+        if self.agent_rel:
+            normalized_av_trajectory = av_trajectory - agent_trajectory
             
         if len(normalized_neighbour_trajectories)!= 0:
             normalized_neighbour_trajectories= torch.stack(normalized_neighbour_trajectories,dim=0)
         else:
             normalized_neighbour_trajectories=torch.zeros(1,50,2)
-#         print(normalized_neighbour_trajectories.shape)
-        return agent_trajectory[0:self.train_seq_size],agent_trajectory[self.train_seq_size:],normalized_neighbour_trajectories[:,0:self.train_seq_size],normalized_neighbour_trajectories[:,self.train_seq_size:], R, trajectory_mean
+            
+        if (normalized_av_trajectory.shape[0])== 0:
+            normalized_av_trajectory = torch.zeros(1,50,2)    
+        
+        return agent_trajectory[0:self.train_seq_size], agent_trajectory[self.train_seq_size:], normalized_neighbour_trajectories[:,0:self.train_seq_size], normalized_neighbour_trajectories[:,self.train_seq_size:], normalized_av_trajectory[0:self.train_seq_size], normalized_av_trajectory[self.train_seq_size:], R, trajectory_mean
 
     def __getitem__(self,index):
         current_loader = self.afl.get(self.seq_paths[index])
         agent_traj = current_loader.agent_traj
         neighbours_traj = current_loader.neighbour_traj()
         city = current_loader.city
+        av_traj = current_loader.av_traj
         
-        agent_train_traj,agent_gt_traj,neighbours_traj,neighbours_gt_traj, R, t =self.transform_social(agent_traj,neighbours_traj)
-        return {'city_name':city , 'indexes':index, 'seq_path':self.seq_paths[index],'train_agent':agent_train_traj, 'gt_agent':agent_gt_traj, 'neighbour':neighbours_traj,'neighbour_gt':neighbours_gt_traj, 'rotation': R, 'translation': t}
+        agent_train_traj,agent_gt_traj,neighbours_traj,neighbours_gt_traj, av_traj_, av_gt_traj, R, t =self.transform_social(agent_traj,neighbours_traj, av_traj)
+
+        return {'city_name':city , 'indexes':index, 'seq_path':self.seq_paths[index],'train_agent':agent_train_traj, 'gt_agent':agent_gt_traj, 'neighbour':neighbours_traj,'neighbour_gt':neighbours_gt_traj, 'av':av_traj_, 'av_gt':av_gt_traj, 'rotation': R, 'translation': t}
 
 class Argoverse_LaneCentre_Data(Argoverse_Data):
     def __init__(self,root_dir='argoverse-data//data',avm=None,social=False,train_seq_size=20,cuda=False,test=False,oracle=True):
