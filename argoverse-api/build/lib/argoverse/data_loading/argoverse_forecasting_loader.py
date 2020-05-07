@@ -92,11 +92,6 @@ class ArgoverseForecastingLoader:
         return _read_csv(self.current_seq)
 
     @property
-    def get_index(self) -> int:
-        idx = self.counter
-        return idx
-    
-    @property
     def agent_traj(self) -> np.ndarray:
         """Get the trajectory for the track of type 'AGENT' in the current sequence.
 
