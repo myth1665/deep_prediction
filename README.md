@@ -1,4 +1,9 @@
-# Social GAN for Autonomous Vehicle Motion Forecasting
+# Motion forecasting for Autonomous Vehicle using Argoverse Dataset
+
+### Official Argoverse Links:
+1) [Argoverse-API](https://github.com/argoai/argoverse-api.git)
+2) [Argoverse-Forecasting Baselines](https://github.com/jagjeet-singh/argoverse-forecasting)
+3) [Datasets](https://www.argoverse.org/data.html#download-link)
 
 The origin code for Social GAN provided by Agrim Gupta et.al. has been modified with data preprocessing and integration of argoverse-api for the argoverse dataset.
 
@@ -9,8 +14,10 @@ A better understanding of agents' behaviour in a dynamic traffic environment is 
 Below we show an examples of predictions made by our model in complex scenarios. Each traffic actor category is denoted by a different color. 
 
 <div align='center'>
-<img src="images/2.gif"></img>
-<img src="images/3.gif"></img>
+<img src="images/01.png" width="400"/>
+<img src="images/02.png" width="400"/>
+<img src="images/03.jpeg" width="400"/>
+<img src="images/04.jpeg" width="400"/>
 </div>
 
 ## Model
@@ -20,35 +27,35 @@ Our model consists of three key components: Generator (G), Pooling Module (PM) a
   <img src='images/model.png' width='1000px'>
 </div>
 
+## Performance compared to Baselines
+| BASELINE | ADE | FDE |
+| :---: | :---: | :---: |
+| Constant Velocity | 3.55 | 7.89 |
+| LSTM ED | 2.27 | 5.19 |
+| Social LSTM | 1.8 | 3.89 |
+| Social GAN | 0.035 | 0.85 |
+
 ## Setup
-All code was developed and tested on Ubuntu 16.04 with Python 3.5 and PyTorch 0.4.
+All code was developed and tested on Ubuntu 16.04 with Python 3.6 and PyTorch.
 
 You can setup a virtual environment to run the code like this:
 
 ```bash
-python3 -m venv env               # Create a virtual environment
-source env/bin/activate           # Activate virtual environment
-pip install -r requirements.txt   # Install dependencies
-echo $PWD > env/lib/python3.5/site-packages/sgan.pth  # Add current directory to python path
-# Work for a while ...
-deactivate  # Exit virtual environment
+conda create --name myenv python=3.6      # Create a virtual environment
+conda activate myenv                      # Activate virtual environment
+cd sgan/                                  # Navigate to the root directory of the repository
+pip install -e argoverse-api              # install argoverse
+pip install mypy                          # argoverse dependencies
 ```
 
-## Pretrained Models
-You can download pretrained models by running the script `bash scripts/download_models.sh`. This will download the following models:
-
-- `sgan-models/<dataset_name>_<pred_len>.pt`: Contains 10 pretrained models for all five datasets. These models correspond to SGAN-20V-20 in Table 1.
-- `sgan-p-models/<dataset_name>_<pred_len>.pt`: Contains 10 pretrained models for all five datasets. These models correspond to SGAN-20VP-20 in Table 1.
-
-Please refer to [Model Zoo](MODEL_ZOO.md) for results.
+## Download Dataset
+You can download the dataset from argoverse website. 
 
 ## Running Models
-You can use the script `scripts/evaluate_model.py` to easily run any of the pretrained models on any of the datsets. For example you can replicate the Table 1 results for all datasets for SGAN-20V-20 like this:
 
 ```bash
-python scripts/evaluate_model.py \
-  --model_path models/sgan-models
+sh scripts/run_traj_argo.sh
 ```
 
-## Training new models
-Instructions for training new models can be [found here](TRAINING.md).
+To visualize the trajectories, use `test_argo.ipynb`. Trained model is saved in the `saved_model` folder.
+
