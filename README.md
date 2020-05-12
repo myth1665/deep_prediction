@@ -1,134 +1,61 @@
-[![Python 3.7](https://img.shields.io/badge/python-3.7-blue.svg)](https://www.python.org/downloads/release/python-370/)
-
-
-# Motion Forecasting for Autonomous Vehicles using the Argoverse Motion Forecasting Dataset
+# Motion forecasting for Autonomous Vehicle using Argoverse Dataset
 
 ### Official Argoverse Links:
 1) [Argoverse-API](https://github.com/argoai/argoverse-api.git)
 2) [Argoverse-Forecasting Baselines](https://github.com/jagjeet-singh/argoverse-forecasting)
 3) [Datasets](https://www.argoverse.org/data.html#download-link)
 
----
+The origin code for Social GAN provided by Agrim Gupta et.al. has been modified with data preprocessing and integration of argoverse-api for the argoverse dataset.
 
-## Table of Contents
+**<a href="https://arxiv.org/abs/1803.10892">Social GAN: Socially Acceptable Trajectories with Generative Adversarial Networks</a>**
 
-> If you have any questions, feel free to open a [GitHub issue](https://github.com/jagjeet-singh/argoverse-forecasting/issues) describing the problem.
+A better understanding of agents' behaviour in a dynamic traffic environment is required for an efficient modelling and navigation of autonomous vehicles. In this project we plan to address the problem of motion forecasting of traffic actors through experimentation on the Argoverse Motion Forecasting dataset. We attempt to tackle this challenge using Generative Adversarial Networks (GANs) and compare out results with baseline methods of seq-to-seq prediction and social LSTM provided by the Argoverse Challenge.
 
-- [Installation](https://github.com/sapan-ostic/deep_prediction/wiki/Installations)
-- [Usage](#usage)
-- [GCP Instructions](https://github.com/sapan-ostic/deep_prediction/wiki/)
----
+Below we show an examples of predictions made by our model in complex scenarios. Each traffic actor category is denoted by a different color. 
 
-## Usage
+<div align='center'>
+<img src="images/01.png" width="400"/>
+<img src="images/02.png" width="400"/>
+<img src="images/03.jpeg" width="400"/>
+<img src="images/04.jpeg" width="400"/>
+</div>
 
-Running Motion Forecasting baselines has the below 3 components. The runtimes observed on a p2.8xlarge instance (8 NVIDIA K80 GPUs, 32 vCPUs and 488 GiB RAM) are also provided for each part:
+## Model
+Our model consists of three key components: Generator (G), Pooling Module (PM) and Discriminator (D). G is based on encoder-decoder framework where we link the hidden states of encoder and decoder via PM. G takes as input trajectories of all people involved in a scene and outputs corresponding predicted trajectories. D inputs the entire sequence comprising both input trajectory and future prediction and classifies them as “real/fake”.
 
-### 1) Run forecasting baselines (`const_vel_train_test.py`, `nn_train_test.py`, `lstm_train_test.py`)
+<div align='center'>
+  <img src='images/model.png' width='1000px'>
+</div>
 
-#### Constant Velocity:
+## Performance compared to Baselines
+| BASELINE | ADE | FDE |
+| :---: | :---: | :---: |
+| Constant Velocity | 3.55 | 7.89 |
+| LSTM ED | 2.27 | 5.19 |
+| Social LSTM | 1.8 | 3.89 |
+| Social GAN | 0.035 | 0.85 |
 
-```
-$ python const_vel_train_test.py --test_features features/forecasting_features_test.pkl --obs_len 20 --pred_len 30 --traj_save_path saved_traj/const_vel.pkl
-```
+## Setup
+All code was developed and tested on Ubuntu 16.04 with Python 3.6 and PyTorch.
 
-| Component | Mode | Runtime |
-| --- | --- | --- |
-| Constant Velocity (`const_vel_train_test.py`) | train+test | less than 1 min |
+You can setup a virtual environment to run the code like this:
 
-
-#### K-Nearest Neighbors:
-
-Using Map prior:
-```
-$ python nn_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_map --use_delta --obs_len 20 --pred_len 30 --n_neigh 3 --model_path saved_models/nn_model_map_prior.pkl --traj_save_path saved_traj/nn_traj_map_prior.pkl
-```
-
-Neither map nor social:
-```
-$ python nn_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --normalize --use_delta --obs_len 20 --pred_len 30 --n_neigh 9 --model_path saved_models/nn_model_none.pkl --traj_save_path saved_traj/nn_traj_none.pkl
-```
-
-| Component | Mode | Baseline | Runtime |
-| --- | --- | --- | --- |
-| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Map prior | 3.2 hrs |
-| K-Nearest Neighbors (`nn_train_test.py`) | train+test | Niether map nor social | 0.5 hrs | 
-
-#### LSTM:
-
-Using Map prior:
-```
-$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_map --use_delta --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar 
+```bash
+conda create --name myenv python=3.6      # Create a virtual environment
+conda activate myenv                      # Activate virtual environment
+cd sgan/                                  # Navigate to the root directory of the repository
+pip install -e argoverse-api              # install argoverse
+pip install mypy                          # argoverse dependencies
 ```
 
-Using Social features:
-```
-$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_social --use_delta --normalize --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar
-```
+## Download Dataset
+You can download the dataset from argoverse website. 
 
-Neither map nor social:
-```
-$ python lstm_train_test.py --train_features features/forecasting_features_train.pkl --val_features features/forecasting_features_val.pkl --test_features features/forecasting_features_test.pkl --use_delta --normalize --obs_len 20 --pred_len 30 --model_path saved_models/lstm.pth.tar
-```
+## Running Models
 
-| Component | Mode | Baseline | Runtime |
-| --- | --- | --- | --- |
-| LSTM (`lstm_train_test.py`) | train | Map prior | 2 hrs |
-| LSTM (`lstm_train_test.py`) | test | Map prior | 1.5 hrs |
-| LSTM (`lstm_train_test.py`) | train | Social | 5.5 hrs |
-| LSTM (`lstm_train_test.py`) | test | Social | 0.1 hr |
-| LSTM (`lstm_train_test.py`) | train | Neither Social nor Map | 5.5 hrs |
-| LSTM (`lstm_train_test.py`) | test | Neither Social nor Map | 0.1 hr |
----
-
-Also tested on Google Cloud Platform:
-1 NVIDIA K80 GPU,
-4 vCPUs - 15GB RAM 
-
-### 3) Metrics and visualization
-
-#### Evaluation metrics
-
-Here we compute the metric values for the given trajectories. Since ground truth trajectories for the test set have not been released, you can run the evaluation on the val set. If doing so, make sure you don't train any of the above baselines on val set.
-
-Some examples:
-
-Evaluating a baseline that didn't use map and allowing 6 guesses
-```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --max_n_guesses 6
+```bash
+sh scripts/run_traj_argo.sh
 ```
 
-Evaluating a baseline that used map prior and allowing 1 guesses along each of the 9 centerlines
-```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --n_guesses_cl 1 --n_cl 9 --max_neighbors_cl 3
-```
+To visualize the trajectories, use `test_argo.ipynb`. Trained model is saved in the `saved_model` folder.
 
-Evaluating a K-NN baseline that can use map for pruning and allowing 6 guesses
-```
-python eval_forecasting_helper.py --metrics --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --miss_threshold 2 --features <path/to/test/features> --prune_n_guesses 6
-```
-
-It will print out something like
-```
-------------------------------------------------
-Prediction Horizon : 30, Max #guesses (K): 1
-------------------------------------------------
-minADE: 3.533317191869932
-minFDE: 7.887520305278937
-DAC: 0.8857479236783845
-Miss Rate: 0.9290787402582446
-------------------------------------------------
-```
-
-#### Visualization
-
-Here we visualize the forecasted trajectories
-
-```
-python eval_forecasting_helper.py --viz --gt <path/to/ground/truth/pkl/file> --forecast <path/to/forecasted/trajectories/pkl/file> --horizon 30 --obs_len 20 --features <path/to/test/features>
-```
-Some sample results are shown below
-
-| | |
-|:-------------------------:|:-------------------------:|
-| ![](images/lane_change.png) | ![](images/map_for_reference_1.png) |
-| ![](images/right_straight.png) | ![](images/map_for_reference_2.png) |
